@@ -10,7 +10,7 @@ use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.numeric_std.ALL;
 
 library work;
-
+use work.Toplevel_Config.ALL;
 
 -- -----------------------------------------------------------------------
 
@@ -79,6 +79,7 @@ architecture rtl of chameleon_toplevel is
 	
 -- System clocks
 	signal clk : std_logic;
+	signal slowclk : std_logic;
 
 	signal reset_button_n : std_logic;
 	signal pll_locked : std_logic;
@@ -179,115 +180,19 @@ begin
 -- -----------------------------------------------------------------------
 -- Clocks and PLL
 -- -----------------------------------------------------------------------
-	mypll : entity work.Clock_8to100Split
+	mypll : entity work.clockgen
 		port map (
 			inclk0 => clk8,
-			c0 => clk,
---			c1 => sdram_clk,
---			c2 => clk,
+			c0 => slowclk,
+			c1 => clk,
+			c2 => sdram_clk,
 			locked => pll_locked
 		);
-
--- -----------------------------------------------------------------------
--- MUX CPLD
--- -----------------------------------------------------------------------
---	-- MUX clock
---	process(clk)
---	begin
---		if rising_edge(clk) then
---			mux_clk_reg <= not mux_clk_reg;
---		end if;
---	end process;
---
---	-- MUX read
---	process(clk)
---	begin
---		if rising_edge(clk) then
---			if mux_clk_reg = '1' then
---				case mux_reg is
-----				when X"6" =>
-----					irq_n <= mux_q(2);
---				when X"B" =>
---					reset_button_n <= mux_q(1);
-----					ir <= mux_q(3);
---				when X"A" =>
-----					vga_id <= mux_q;
---				when X"E" =>
---					ps2_keyboard_dat_in <= mux_q(0);
---					ps2_keyboard_clk_in <= mux_q(1);
---					ps2_mouse_dat_in <= mux_q(2);
---					ps2_mouse_clk_in <= mux_q(3);
---				when others =>
---					null;
---				end case;
---			end if;
---		end if;
---	end process;
---
---	-- MUX write
---	process(clk)
---	begin
---		if rising_edge(clk) then
-----			docking_ena <= '0';
---			if mux_clk_reg = '1' then
---				mux_reg<=X"C";
---				mux_d_reg(3) <= '1'; -- usart_rx;	-- AMR transmit to Chameleons uC
---				mux_d_reg(2) <= spi_cs;
---				mux_d_reg(1) <= spi_mosi;
---				mux_d_reg(0) <= spi_clk;
---
---				case mux_reg is
---				when X"7" =>
---					mux_d_regd <= "1111";
---					mux_regd <= X"6";
---				when X"6" =>
---					mux_d_regd <= "1111";
---					mux_regd <= X"8";
---				when X"8" =>
---					mux_d_regd <= "1111";
---					mux_regd <= X"A";
---				when X"A" =>
---					mux_d_regd <= "10" & led_green & led_red;
---					mux_regd <= X"B";
---				when X"B" =>
---				   -- RS232 serial over IEC port; TxD -> ATN as per Christian Vogelgsang's Minimig core
-----					mux_d_reg <= iec_reg;
---					mux_d_regd <= "1111";
---					mux_d_regd(3) <= rs232_txd; -- ATN
---					mux_regd <= X"D";
-----					docking_ena <= '1';
---				when X"C" =>
---					mux_reg <= mux_regd;
---					mux_d_reg <= mux_d_regd;
---				when X"D" =>
---					rs232_rxd <= mux_q(1); -- IEC_CLK -> RxD
---					mux_d_regd(0) <= ps2_keyboard_dat_out;
---					mux_d_regd(1) <= ps2_keyboard_clk_out;
---					mux_d_regd(2) <= ps2_mouse_dat_out;
---					mux_d_regd(3) <= ps2_mouse_clk_out;
---					mux_regd <= X"E";
---				when X"E" =>
---					mux_d_regd <= "1111";
---					mux_regd <= X"7";
---				when others =>
---					mux_regd <= X"B";
---					mux_d_regd <= "10" & led_green & led_red;
---				end case;
---
---			end if;
---		end if;
---	end process;
---	
---	mux_clk <= mux_clk_reg;
---	mux_d <= mux_d_reg;
---	mux <= mux_reg;
---
-
 
 my1mhz : entity work.chameleon_1mhz
 	generic map (
 		-- Timer calibration. Clock speed in Mhz.
-		clk_ticks_per_usec => 100
+		clk_ticks_per_usec => sysclk_frequency
 	)
 	port map(
 		clk => clk,
@@ -377,36 +282,28 @@ myReset : entity work.gen_reset
 			restore_key_n => c64_restore_key_n,
 			c64_nmi_n => c64_nmi_n,
 
---
---			iec_clk_out : in std_logic := '1';
---			iec_dat_out : in std_logic := '1';
+		-- IEC signals - abusing these for UART output.
 			iec_atn_out => rs232_txd,
---			iec_srq_out : in std_logic := '1';
 			iec_clk_in => rs232_rxd
---			iec_dat_in : out std_logic;
---			iec_atn_in : out std_logic;
---			iec_srq_in : out std_logic
-	
 		);
 
 
 	myproject : entity work.VirtualToplevel
 		generic map(
 			sdram_rows => 13,
-			sdram_cols => 9,
-			sysclk_frequency => 1000
+			sdram_cols => 9
 		)
 		port map(
-			hostclk => clk8,
+			slowclk => slowclk,
 			clk => clk,
-			reset_in => freeze_n and pll_locked,
+			reset_in => n_reset and pll_locked,
 			
 			-- SDRAM
 			sdr_addr => sd_addr(12 downto 0),
 			sdr_data(15 downto 0) => sd_data,
 			sdr_ba(1) => sd_ba_1,
 			sdr_ba(0) => sd_ba_0,
-			sdr_clk => sdram_clk,
+--			sdr_clk => sdram_clk,
 			sdr_cke => open, -- sd_cke,
 			sdr_dqm(1) => sd_udqm,
 			sdr_dqm(0) => sd_ldqm,
