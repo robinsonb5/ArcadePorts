@@ -35,7 +35,7 @@
 extern "C" {
 #endif
 
-int HandlePS2RawCodes();
+void KeyboardHandler();
 void ClearKeyboard();
 
 int TestKey(int rawcode);
