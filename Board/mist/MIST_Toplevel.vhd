@@ -71,8 +71,8 @@ signal osdclk:  std_logic;
 -- user_io
 signal buttons: std_logic_vector(1 downto 0);
 signal status:  std_logic_vector(7 downto 0);
-signal joy_0: std_logic_vector(5 downto 0);
-signal joy_1: std_logic_vector(5 downto 0);
+signal joy_0: std_logic_vector(7 downto 0);
+signal joy_1: std_logic_vector(7 downto 0);
 signal joy_ana_0: std_logic_vector(15 downto 0);
 signal joy_ana_1: std_logic_vector(15 downto 0);
 signal txd:     std_logic;
@@ -211,7 +211,7 @@ mypll : entity work.hostpll
 port map
 (
 	inclk0 => CLOCK_27(0),
---	c0 => SDRAM_CLK,
+	c0 => SDRAM_CLK,
 	c1 => sysclk,
 	c2 => slowclk,
 	locked => pll_locked
@@ -227,13 +227,12 @@ myVirtualToplevel : entity work.VirtualToplevel
 generic map
 (
 	sdram_rows => 13,
-	sdram_cols => 9,
-	sysclk_frequency => 1000
+	sdram_cols => 9
 )
 port map
 (	
 	clk=>sysclk,
-	hostclk => CLOCK_27(0),
+	slowclk => slowclk,
 	reset_in => reset,
 
 	-- video
@@ -254,7 +253,7 @@ port map
 	sdr_ras => SDRAM_nRAS,
 	sdr_cs => SDRAM_nCS,
 	sdr_ba => SDRAM_BA,
-	sdr_clk => SDRAM_CLK,
+--	sdr_clk => SDRAM_CLK,
 	sdr_cke => SDRAM_CKE,
 
 	-- RS232
@@ -267,6 +266,11 @@ port map
 	spi_mosi => sd_sdi,
 	spi_clk => sd_sck,
  
+   -- Joystick
+	joy1 => joy_0,
+	joy2 => joy_1,
+	joy3 => (others=>'0'),
+	joy4 => (others=>'0'),
 	-- Audio
 	audio_l => AUDIO_L,
 	audio_r => AUDIO_R
@@ -360,8 +364,8 @@ user_io_d : host_user_io
 		sd_din => sd_data_out,
 		sd_din_strobe => sd_data_out_strobe,
 
-      joystick_0 => joy_0,
-      joystick_1 => joy_1,
+      joystick_0 => joy_0(5 downto 0),
+      joystick_1 => joy_1(5 downto 0),
       joystick_analog_0 => joy_ana_0,
       joystick_analog_1 => joy_ana_1,
 --      switches => switches,

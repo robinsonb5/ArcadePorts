@@ -204,7 +204,7 @@ myReset : entity work.gen_reset
 		resetCycles => 131071
 	)
 	port map (
-		clk => clk,
+		clk => slowclk,
 		enable => '1',
 		button => not freeze_n,
 		nreset => n_reset
@@ -341,6 +341,12 @@ myReset : entity work.gen_reset
 			spi_miso => spi_miso,
 			spi_mosi => spi_mosi,
 			spi_clk => spi_clk,
+			
+			-- Joystick
+			joy1 => c64_joy1,
+			joy2 => c64_joy2,
+			joy3 => joystick3, 
+			joy4 => joystick4,
 			
 			-- Audio - FIXME abstract this out, too.
 			audio_l => sigmaL,
