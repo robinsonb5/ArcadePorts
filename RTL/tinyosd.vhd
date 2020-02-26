@@ -8,20 +8,21 @@ use IEEE.numeric_std.ALL;
 -- Works by displaying a very simple bitmapped graphic.
 -- Registers:
 -- 0 - enable
--- 4 - row 1
--- 8 - row 2
--- 12 - row 3
--- 16 - row 4
--- 20 - row 5
+-- 4 - colour
+-- 8 - row 1
+-- 12 - row 2
+-- 16 - row 3
+-- 20 - row 4
+-- 24 - row 5
 
 
 entity TinyOSD is
 generic (
 	hsync_polarity : std_logic := '1';
 	vsync_polarity : std_logic := '1';
-	hstart : integer := 50;
+	hstart : integer := 35;
 	vstart : integer := 50;
-	pixelclock : integer := 3
+	pixelclock : integer := 7
 );
 port(
 	reset_n : in std_logic;
@@ -56,7 +57,7 @@ signal pix : std_logic; -- Triggered momentarily at a pixel boundary
 
 -- Pixel-clock-based signals
 signal xpixelpos : signed(11 downto 0);
-signal ypixelpos : signed(11 downto 0);
+signal ypixelpos : signed(8 downto 0);
 signal hwindowactive : std_logic;
 signal vwindowactive : std_logic;
 signal hactive : std_logic;
@@ -160,9 +161,9 @@ end process;
 -- Generate window signal
 
 -- Enable vactive for ypixel positions between 0 and 10, inclusive.
-vactive<='1' when ypixelpos>=0 and ypixelpos<osdheight else '0';
+vactive<='1' when ypixelpos>0 and ypixelpos<(2*osdheight)+4 else '0';
 -- Enable hactive for xpixel positions between 0 and 255, inclusive.
-hactive<='1' when xpixelpos>=0 and xpixelpos<osdwidth else '0';
+hactive<='1' when xpixelpos>=0 and xpixelpos<=osdwidth else '0';
 
 process(clk)
 begin
@@ -189,22 +190,22 @@ begin
 			if ypixelpos=-4 then -- 4 pixel border
 				vwindowactive<='1';
 			end if;
-			if ypixelpos=osdheight+4 then -- 4 pixel border
+			if ypixelpos=osdheight*2+1 then -- 4 pixel border
 				vwindowactive<='0';
 			end if;
 			
 			xpixelpos<=to_signed(-hstart,xpixelpos'length);
 			
-			case ypixelpos is
-				when X"000" =>
+			case ypixelpos(8 downto 1) is
+				when X"00" =>
 					shifter<=row1;
-				when X"001" =>
+				when X"01" =>
 					shifter<=row2;
-				when X"002" =>
+				when X"02" =>
 					shifter<=row3;
-				when X"003" =>
+				when X"03" =>
 					shifter<=row4;
-				when X"004" =>
+				when X"04" =>
 					shifter<=row5;
 				when others =>
 					null;

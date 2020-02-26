@@ -10,6 +10,7 @@ port (
 	blue_in : in unsigned(7 downto 0);
 	window_in : in std_logic;
 	hsync_in : in std_logic;
+	osd_colour_in : in std_logic_vector(5 downto 0);
 	osd_window_in : in std_logic;
 	osd_pixel_in : in std_logic;
 	red_out : out unsigned(7 downto 0);
@@ -42,9 +43,14 @@ begin
 			window_out<=window_in;
 			
 			if osd_window_in='1' then
-				red_out<=osd_pixel_in&osd_pixel_in&red_in(5 downto 0);
-				green_out<=osd_pixel_in&osd_pixel_in&green_in(5 downto 0);
-				blue_out<=osd_pixel_in&'1'&blue_in(5 downto 0);
+				red_out<=(osd_pixel_in and osd_colour_in(5))
+					&(osd_pixel_in and osd_colour_in(4))
+						&red_in(5 downto 0);
+				green_out<=(osd_pixel_in and osd_colour_in(3))
+					&(osd_pixel_in and osd_colour_in(2))
+						&green_in(5 downto 0);
+				blue_out<=(osd_pixel_in and osd_colour_in(1))
+					& '1' &blue_in(5 downto 0);
 			elsif scanline='1' and scanline_ena='1' then
 				red_out<='0'&red_in(7 downto 1);
 				green_out<='0'&green_in(7 downto 1);

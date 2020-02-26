@@ -99,43 +99,43 @@ int main(int argc,char **argv)
 		int buttons=0;
 
 		if(TestKey(KEY_CAPSLOCK))
-			joya|=0x20;
+			joyc|=0x20;
 		if(TestKey(KEY_LSHIFT))
-			joya|=0x10;
+			joyc|=0x10;
 		if(TestKey(KEY_LCTRL))
-			joya|=0x20;
+			joyc|=0x20;
 		if(TestKey(KEY_ALT))
-			joya|=0x10;
+			joyc|=0x10;
 		if(TestKey(KEY_W))
-			joya|=0x01;
-		if(TestKey(KEY_S))
-			joya|=0x02;
-		if(TestKey(KEY_A))
-			joya|=0x04;
-		if(TestKey(KEY_D))
-			joya|=0x08;
-
-		if(TestKey(KEY_ENTER))
-			joyc|=0x10;
-		if(TestKey(KEY_RSHIFT))
-			joyc|=0x20;
-		if(TestKey(KEY_RCTRL))
-			joyc|=0x10;
-		if(TestKey(KEY_ALTGR))
-			joyc|=0x20;
-		if(TestKey(KEY_UPARROW))
 			joyc|=0x01;
-		if(TestKey(KEY_DOWNARROW))
+		if(TestKey(KEY_S))
 			joyc|=0x02;
-		if(TestKey(KEY_LEFTARROW))
+		if(TestKey(KEY_A))
 			joyc|=0x04;
-		if(TestKey(KEY_RIGHTARROW))
+		if(TestKey(KEY_D))
 			joyc|=0x08;
 
+		if(TestKey(KEY_ENTER))
+			joya|=0x10;
+		if(TestKey(KEY_RSHIFT))
+			joya|=0x20;
+		if(TestKey(KEY_RCTRL))
+			joya|=0x10;
+		if(TestKey(KEY_ALTGR))
+			joya|=0x20;
+		if(TestKey(KEY_UPARROW))
+			joya|=0x01;
+		if(TestKey(KEY_DOWNARROW))
+			joya|=0x02;
+		if(TestKey(KEY_LEFTARROW))
+			joya|=0x04;
+		if(TestKey(KEY_RIGHTARROW))
+			joya|=0x08;
+
 		if(TestKey(KEY_N))
-			joyb|=0x20;
-		if(TestKey(KEY_B))
 			joyb|=0x10;
+		if(TestKey(KEY_B))
+			joyb|=0x20;
 //		if(TestKey(KEY_LCTRL))
 //			joyb|=0x20;
 //		if(TestKey(KEY_ALT))
