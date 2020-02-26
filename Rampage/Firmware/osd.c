@@ -5,8 +5,15 @@
 
 static int menu=0;
 static int lastjoy=0;
-static int difficulty=0;
+static int difficulty=3; /* Default to freeplay */
 static int cheat=0;
+
+int osd_getdipswitches()
+{
+	int result=cheat<<11;
+	result|=difficulty<<8;
+	return(result);
+}
 
 void osd_showhide(int visible)
 {

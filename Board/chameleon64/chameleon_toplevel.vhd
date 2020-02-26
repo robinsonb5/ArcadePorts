@@ -142,6 +142,10 @@ architecture rtl of chameleon_toplevel is
 	signal c64_joy2 : unsigned(5 downto 0);
 	signal joystick3 : unsigned(5 downto 0);
 	signal joystick4 : unsigned(5 downto 0);
+	signal cdtv_joya : unsigned(5 downto 0);
+	signal cdtv_joyb : unsigned(5 downto 0);
+	signal power_button : std_logic;
+	
 	signal usart_rx : std_logic:='1'; -- Safe default
 	signal ir : std_logic;
 
@@ -287,6 +291,16 @@ myReset : entity work.gen_reset
 			iec_clk_in => rs232_rxd
 		);
 
+	cdtv : entity work.chameleon_cdtv_remote
+	port map(
+		clk => clk,
+		ena_1mhz => ena_1mhz,
+		ir => ir,
+		key_power => power_button,
+		joystick_a => cdtv_joya,
+		joystick_b => cdtv_joyb
+	);
+
 
 	myproject : entity work.VirtualToplevel
 		generic map(
@@ -343,8 +357,8 @@ myReset : entity work.gen_reset
 			spi_clk => spi_clk,
 			
 			-- Joystick
-			joy1 => c64_joy1,
-			joy2 => c64_joy2,
+			joy1 => c64_joy1 and cdtv_joya,
+			joy2 => c64_joy2 and cdtv_joyb,
 			joy3 => joystick3, 
 			joy4 => joystick4,
 			

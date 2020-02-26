@@ -190,7 +190,7 @@ begin
 			if ypixelpos=-4 then -- 4 pixel border
 				vwindowactive<='1';
 			end if;
-			if ypixelpos=osdheight*2+1 then -- 4 pixel border
+			if ypixelpos=osdheight*2+4 then -- 4 pixel border
 				vwindowactive<='0';
 			end if;
 			

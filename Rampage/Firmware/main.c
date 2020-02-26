@@ -169,10 +169,14 @@ int main(int argc,char **argv)
 			menu ^= 1;
 			osd_showhide(menu);
 			printf("Show menu %d\n",menu);
-//			if(!menu)
-//			{
+			if(!menu)
+			{
+				int v=osd_getdipswitches();
 				// Reset the core to make switches take effect.
-//			}
+				HW_UPLOAD(UPLOAD_STATUS)=v|1;
+				HW_UPLOAD(UPLOAD_STATUS)=v|1;
+				HW_UPLOAD(UPLOAD_STATUS)=v;
+			}
 		}
 
 //		HW_HOST(HW_HOST_SWITCHES)=switches;
