@@ -291,12 +291,12 @@ joy3<="11" & joystick3;
 joy4<="11" & joystick4;
 	
 
-  U00 : entity work.hostpll
+  U00 : entity work.clockgen
     port map(
       inclk0 => clk50m,       -- 50 MHz external
       c0     => slowclk,         -- 50MHz internal
       c1     => fastclk,         -- 100MHz = 21.43MHz x 4
---      c2     => ram_clk,        -- 100MHz external
+      c2     => ram_clk,        -- 100MHz external
       locked => pll_locked
     );
 
@@ -305,12 +305,11 @@ vga_window<='1';
 virtualtoplevel : entity work.VirtualToplevel
 	generic map(
 		sdram_rows => 13,
-		sdram_cols => 9,
-		sysclk_frequency => 100 -- Sysclk frequency * 10
+		sdram_cols => 9
 	)
 	port map(
 		clk => fastclk,
-		hostclk => clk50m,
+		slowclk => clk50m,
 		reset_in => n_reset,
 
 		-- VGA
@@ -330,9 +329,7 @@ virtualtoplevel : entity work.VirtualToplevel
 		sdr_cas => ram_cas,
 		sdr_ras => ram_ras,
 		unsigned(sdr_ba) => ram_ba,
-		sdr_clk => ram_clk,
 
-		
     -- PS/2 keyboard ports
 	 ps2k_clk_out => ps2_keyboard_clk_out,
 	 ps2k_dat_out => ps2_keyboard_dat_out,
@@ -350,11 +347,16 @@ virtualtoplevel : entity work.VirtualToplevel
 	spi_cs => mmc_cs,
 	spi_miso => spi_miso,
 
-	signed(audio_l) => audio_l,
-	signed(audio_r) => audio_r,
+	audio_l => sigma_l,
+	audio_r => sigma_r,
 	 
 	rxd => rs232_rxd,
-	txd => rs232_txd
+	txd => rs232_txd,
+	
+	joy1 => joy1(5 downto 0),
+	joy2 => joy2(5 downto 0),
+	joy3 => joy3(5 downto 0),
+	joy4 => joy4(5 downto 0)
 );
 
 	
@@ -379,26 +381,6 @@ virtualtoplevel : entity work.VirtualToplevel
 			oGreen => grn,
 			oBlue => blu
 		);
-	
-leftsd: component hybrid_pwm_sd
-	port map
-	(
-		clk => fastclk,
-		n_reset => n_reset,
-		din(15) => not audio_l(15),
-		din(14 downto 0) => std_logic_vector(audio_l(14 downto 0)),
-		dout => sigma_l
-	);
-	
-rightsd: component hybrid_pwm_sd
-	port map
-	(
-		clk => fastclk,
-		n_reset => n_reset,
-		din(15) => not audio_r(15),
-		din(14 downto 0) => std_logic_vector(audio_r(14 downto 0)),
-		dout => sigma_r
-	);
 
 
 end architecture;
