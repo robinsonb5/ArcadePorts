@@ -1,26 +1,29 @@
+#include <stdio.h>
 #include "osd.h"
 
 #include "osd_spritesheet.h"
 
-static char menu=0;
-static char lastjoy=0;
-static char difficulty=0;
-static char cheat=0;
+static int menu=0;
+static int lastjoy=0;
+static int difficulty=0;
+static int cheat=0;
 
-void osd_showhide(int visible)
+volatile void osd_showhide(int visible)
 {
 	HW_OSD(REG_OSD_VISIBLE)=visible;
+	printf("Set OSD visibility to %d\n",visible);
 }
 
-void osd_setmsg(enum OSD_Message msg)
+volatile void osd_setmsg(enum OSD_Message msg)
 {
 	lastjoy=0;
 	menu=msg;
 	osd_draw(0);
 }
 
-void osd_draw(int joy)
+volatile void osd_draw(int joy)
 {
+	int reg;
 	int row;
 	int trigger=0;
 	int col=0x3f;
@@ -37,7 +40,9 @@ void osd_draw(int joy)
 
 		if(joy&16)	/* fire */
 			trigger=1;
+		lastjoy=joy;
 	}
+	printf("Drawing menu %d, dif: %d, cheat: %d\n",menu,difficulty,cheat);
 	switch(menu)
 	{
 		case 0: /* Difficulty DIP */
@@ -57,7 +62,12 @@ void osd_draw(int joy)
 	}
 	HW_OSD(REG_OSD_COLOUR)=col;
 	row*=3;
-	trigger=(OSD_Spritesheet_bits[row+2]<<16)|(OSD_Spritesheet_bits[row+1]<<8)|OSD_Spritesheet_bits[row+0];
-	HW_OSD(REG_OSD_DATA)=trigger;
+	for(reg=0;reg<5;++reg)
+	{
+		trigger=(OSD_Spritesheet_bits[row+2]<<16)|(OSD_Spritesheet_bits[row+1]<<8)|OSD_Spritesheet_bits[row];
+		printf("Sending row %d, %x\n",row,trigger);
+		HW_OSD(REG_OSD_ROW1+(4*reg))=trigger;
+		row+=3;
+	}
 }
 

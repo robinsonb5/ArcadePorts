@@ -49,6 +49,15 @@
 #define KEY_D 0x23
 #define KEY_W 0x1d
 #define KEY_S 0x1b
+
+#define KEY_I 0x43
+#define KEY_J 0x3b
+#define KEY_K 0x42
+#define KEY_L 0x4b
+#define KEY_B 0x32
+#define KEY_N 0x31
+
+
 #define KEY_LSHIFT 0x12
 #define KEY_RSHIFT 0x59
 #define KEY_LCTRL 0x14
@@ -64,7 +73,9 @@ extern "C" {
 void KeyboardHandler();
 void ClearKeyboard();
 
+void AcknowledgeKey(int rawcode);
 int TestKey(int rawcode);
+int TestKeyStroke(int rawcode);
 
 // Each keytable entry has two bits: bit 0 - currently pressed, bit 1 - pressed since last test
 extern unsigned int keytable[16];

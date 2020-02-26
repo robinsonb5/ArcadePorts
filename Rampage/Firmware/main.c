@@ -38,6 +38,7 @@ int main(int argc,char **argv)
 {
 	int havesd;
 	int i,c;
+	int menu=0;
 
 	puts("Initializing SD card\n");
 	havesd=spi_init() && FindDrive();
@@ -92,44 +93,62 @@ int main(int argc,char **argv)
 
 	while(1)
 	{
-		int menu=0;
 		int joya=0;
 		int joyb=0;
+		int joyc=0;
 		int buttons=0;
 
-		if(TestKey(KEY_ENTER))
-			joya|=0x10;
-		if(TestKey(KEY_RSHIFT))
+		if(TestKey(KEY_CAPSLOCK))
 			joya|=0x20;
-		if(TestKey(KEY_RCTRL))
+		if(TestKey(KEY_LSHIFT))
 			joya|=0x10;
-		if(TestKey(KEY_ALTGR))
+		if(TestKey(KEY_LCTRL))
 			joya|=0x20;
-		if(TestKey(KEY_UPARROW))
+		if(TestKey(KEY_ALT))
+			joya|=0x10;
+		if(TestKey(KEY_W))
 			joya|=0x01;
-		if(TestKey(KEY_DOWNARROW))
+		if(TestKey(KEY_S))
 			joya|=0x02;
-		if(TestKey(KEY_LEFTARROW))
+		if(TestKey(KEY_A))
 			joya|=0x04;
-		if(TestKey(KEY_RIGHTARROW))
+		if(TestKey(KEY_D))
 			joya|=0x08;
 
-		if(TestKey(KEY_CAPSLOCK))
-			joyb|=0x10;
-		if(TestKey(KEY_LSHIFT))
+		if(TestKey(KEY_ENTER))
+			joyc|=0x10;
+		if(TestKey(KEY_RSHIFT))
+			joyc|=0x20;
+		if(TestKey(KEY_RCTRL))
+			joyc|=0x10;
+		if(TestKey(KEY_ALTGR))
+			joyc|=0x20;
+		if(TestKey(KEY_UPARROW))
+			joyc|=0x01;
+		if(TestKey(KEY_DOWNARROW))
+			joyc|=0x02;
+		if(TestKey(KEY_LEFTARROW))
+			joyc|=0x04;
+		if(TestKey(KEY_RIGHTARROW))
+			joyc|=0x08;
+
+		if(TestKey(KEY_N))
 			joyb|=0x20;
-		if(TestKey(KEY_LCTRL))
+		if(TestKey(KEY_B))
 			joyb|=0x10;
-		if(TestKey(KEY_ALT))
-			joyb|=0x20;
-		if(TestKey(KEY_W))
+//		if(TestKey(KEY_LCTRL))
+//			joyb|=0x20;
+//		if(TestKey(KEY_ALT))
+//			joyb|=0x10;
+		if(TestKey(KEY_I))
 			joyb|=0x01;
-		if(TestKey(KEY_S))
+		if(TestKey(KEY_K))
 			joyb|=0x02;
-		if(TestKey(KEY_A))
+		if(TestKey(KEY_J))
 			joyb|=0x04;
-		if(TestKey(KEY_D))
+		if(TestKey(KEY_L))
 			joyb|=0x08;
+
 
 		if(TestKey(KEY_5))
 			buttons|=0x01;
@@ -144,19 +163,21 @@ int main(int argc,char **argv)
 		if(TestKey(KEY_3))
 			buttons|=0x20;
 
-		if(TestKey(KEY_F12))
+		if(TestKeyStroke(KEY_F12))
 		{
+			AcknowledgeKey(KEY_F12);
 			menu ^= 1;
 			osd_showhide(menu);
-			if(!menu)
-			{
+			printf("Show menu %d\n",menu);
+//			if(!menu)
+//			{
 				// Reset the core to make switches take effect.
-			}
+//			}
 		}
 
 //		HW_HOST(HW_HOST_SWITCHES)=switches;
 		HW_HOST(HW_HOST_BUTTONS)=buttons;
-		HW_HOST(HW_HOST_GAMEPAD)=(joyb<<8) | joya;
+		HW_HOST(HW_HOST_GAMEPAD)=(joya << 16) | (joyb <<8) | joyc;
 
 		if(menu)
 		{

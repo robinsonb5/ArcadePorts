@@ -54,11 +54,26 @@ __constructor(100) void ClearKeyboard()
 	EnableInterrupts();
 }
 
+void AcknowledgeKey(int rawcode)
+{
+	// Mask off the "pressed since last test" bit.
+	keytable[rawcode>>4]&=~(2<<((rawcode&15)*2));
+}
+
 int TestKey(int rawcode)
 {
 	int result;
 	result=3&(keytable[rawcode>>4]>>((rawcode&15)*2));
 	keytable[rawcode>>4]&=~(2<<((rawcode&15)*2));	// Mask off the "pressed since last test" bit.
 	return(result);
+}
+
+int TestKeyStroke(int rawcode)
+{
+	int result;
+	result=3&(keytable[rawcode>>4]>>((rawcode&15)*2)); // Test for "pressed and released" rather than "currently down".
+	if(result==2)
+		keytable[rawcode>>4]&=~(2<<((rawcode&15)*2));	// Mask off the "pressed since last test" bit.
+	return(result==2);
 }
 
