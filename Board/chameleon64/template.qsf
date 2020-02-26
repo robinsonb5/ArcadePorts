@@ -245,6 +245,7 @@ set_global_assignment -name VHDL_FILE ../../../Board/chameleon64/gen_reset.vhd
 set_global_assignment -name VHDL_FILE ../../../Board/chameleon64/chameleon_phi_clock_e.vhd
 set_global_assignment -name VHDL_FILE ../../../Board/chameleon64/chameleon_phi_clock_a.vhd
 set_global_assignment -name VHDL_FILE ../../../Board/chameleon64/chameleon_led.vhd
+set_global_assignment -name VHDL_FILE ../../../Board/chameleon64/chameleon_cdtv_remote.vhd
 set_global_assignment -name VHDL_FILE ../../../Board/chameleon64/chameleon_io.vhd
 set_global_assignment -name VHDL_FILE ../../../Board/chameleon64/chameleon_docking_station.vhd
 set_global_assignment -name VHDL_FILE ../../../Board/chameleon64/chameleon_c64_joykeyb.vhd

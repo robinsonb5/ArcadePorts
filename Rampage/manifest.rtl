@@ -5,6 +5,7 @@ RTL/MCR3Mono_MiST.sv
 RTL/sdram.sv
 RTL/mcr3mono.vhd
 RTL/gen_ram.vhd
+RTL/gen_ram_logic.vhd
 RTL/dpram.vhd
 RTL/cmos_ram.vhd
 RTL/sounds_good.vhd
@@ -26,5 +27,6 @@ Firmware/Boot_ROM.vhd
 ../RTL/CPU/MC6809/cpu09l_128a.vhd
 ../RTL/CPU/T80/T80.qip
 ../RTL/tinyosd.vhd
+../RTL/OSD_Overlay.vhd
 PLL/$BOARD/clockgen.vhd
 
