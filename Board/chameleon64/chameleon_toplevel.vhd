@@ -144,7 +144,10 @@ architecture rtl of chameleon_toplevel is
 	signal joystick4 : unsigned(5 downto 0);
 	signal cdtv_joya : unsigned(5 downto 0);
 	signal cdtv_joyb : unsigned(5 downto 0);
+	signal menu_button : std_logic;
+	signal coin_button : std_logic;
 	signal power_button : std_logic;
+	signal play_button : std_logic;
 	
 	signal usart_rx : std_logic:='1'; -- Safe default
 	signal ir : std_logic;
@@ -284,11 +287,11 @@ myReset : entity work.gen_reset
 		-- Keyboards
 			keys => c64_keys,
 			restore_key_n => c64_restore_key_n,
-			c64_nmi_n => c64_nmi_n,
+			c64_nmi_n => c64_nmi_n
 
 		-- IEC signals - abusing these for UART output.
-			iec_atn_out => rs232_txd,
-			iec_clk_in => rs232_rxd
+--			iec_atn_out => rs232_txd,
+--			iec_clk_in => rs232_rxd
 		);
 
 	cdtv : entity work.chameleon_cdtv_remote
@@ -297,10 +300,13 @@ myReset : entity work.gen_reset
 		ena_1mhz => ena_1mhz,
 		ir => ir,
 		key_power => power_button,
+		key_play => play_button,
 		joystick_a => cdtv_joya,
 		joystick_b => cdtv_joyb
 	);
 
+coin_button<=(not play_button) and c64_keys(2) when c64_joy1="111111" else not play_button;
+menu_button<=(not power_button) and c64_keys(15) when c64_joy1="111111" else not power_button;
 
 	myproject : entity work.VirtualToplevel
 		generic map(
@@ -361,7 +367,9 @@ myReset : entity work.gen_reset
 			joy2 => c64_joy2 and cdtv_joyb,
 			joy3 => joystick3, 
 			joy4 => joystick4,
-			
+			button_coin => coin_button,
+			button_power => menu_button,
+
 			-- Audio - FIXME abstract this out, too.
 			audio_l => sigmaL,
 			audio_r => sigmaR

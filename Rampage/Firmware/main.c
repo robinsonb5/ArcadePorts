@@ -39,6 +39,7 @@ int main(int argc,char **argv)
 	int havesd;
 	int i,c;
 	int menu=0;
+	int prevbuttons=HW_HOST(HW_HOST_BUTTONS);
 
 	puts("Initializing SD card\n");
 	havesd=spi_init() && FindDrive();
@@ -97,6 +98,7 @@ int main(int argc,char **argv)
 		int joyb=0;
 		int joyc=0;
 		int buttons=0;
+		int extbuttons=HW_HOST(HW_HOST_BUTTONS);
 
 		if(TestKey(KEY_CAPSLOCK))
 			joyc|=0x20;
@@ -150,6 +152,7 @@ int main(int argc,char **argv)
 			joyb|=0x08;
 
 
+		buttons=extbuttons&1; /* External coin button */
 		if(TestKey(KEY_5))
 			buttons|=0x01;
 		if(TestKey(KEY_6))
@@ -163,7 +166,10 @@ int main(int argc,char **argv)
 		if(TestKey(KEY_3))
 			buttons|=0x20;
 
-		if(TestKeyStroke(KEY_F12))
+		if(TestKey(KEY_F2))
+			buttons|=0x100;	/* Service button */
+
+		if(TestKeyStroke(KEY_F12) || ((extbuttons&0x10) && !(prevbuttons&0x10)))
 		{
 			AcknowledgeKey(KEY_F12);
 			menu ^= 1;
@@ -182,13 +188,15 @@ int main(int argc,char **argv)
 //		HW_HOST(HW_HOST_SWITCHES)=switches;
 		HW_HOST(HW_HOST_BUTTONS)=buttons;
 		HW_HOST(HW_HOST_GAMEPAD)=(joya << 16) | (joyb <<8) | joyc;
-
+		joya|=HW_HOST(HW_HOST_GAMEPAD) & 0x3f;	// Merge in physical joysticks before running the menu.
+		joya|=(HW_HOST(HW_HOST_GAMEPAD)>>8) & 0x3f;
 		if(menu)
 		{
 			osd_draw(joya);
 		}
 
-		pausecpu();
+		prevbuttons=extbuttons;
+//		pausecpu();
 		KeyboardHandler();
 	}
 

@@ -5,7 +5,7 @@
 
 static int menu=0;
 static int lastjoy=0;
-static int difficulty=3; /* Default to freeplay */
+static int difficulty=0;
 static int cheat=0;
 
 int osd_getdipswitches()

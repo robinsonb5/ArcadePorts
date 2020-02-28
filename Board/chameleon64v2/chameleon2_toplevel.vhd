@@ -2,6 +2,7 @@
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
+use work.Toplevel_Config.ALL;
 
 -- -----------------------------------------------------------------------
 
@@ -79,6 +80,8 @@ architecture rtl of chameleon2 is
 	signal c64_keys : unsigned(63 downto 0);
 	signal c64_restore_key_n : std_logic;
 	signal c64_nmi_n : std_logic;
+	signal cdtv_joya : unsigned(5 downto 0);
+	signal cdtv_joyb : unsigned(5 downto 0);
 	signal c64_joy1 : unsigned(5 downto 0);
 	signal c64_joy2 : unsigned(5 downto 0);
 	signal joystick3 : unsigned(5 downto 0);
@@ -91,6 +94,8 @@ architecture rtl of chameleon2 is
 	signal joy4 : unsigned(7 downto 0);
 	signal ir : std_logic;
 	signal ir_d : std_logic;
+	signal power_button : std_logic;
+	signal play_button : std_logic;
 
 	-- Sigma Delta audio
 	COMPONENT hybrid_pwm_sd
@@ -158,7 +163,7 @@ begin
 -- -----------------------------------------------------------------------
 	my1Mhz : entity work.chameleon_1mhz
 		generic map (
-			clk_ticks_per_usec => 100
+			clk_ticks_per_usec => sysclk_frequency
 		)
 		port map (
 			clk => fastclk,
@@ -218,12 +223,27 @@ begin
 -- -----------------------------------------------------------------------
 -- Chameleon IO, docking station and cartridge port
 -- -----------------------------------------------------------------------
+
+-- Handle the CDTV controller ourselves so we can access the power button
+
+	cdtv : entity work.chameleon_cdtv_remote
+	port map(
+		clk => fastclk,
+		ena_1mhz => ena_1mhz,
+		ir => ir,
+		key_power => power_button,
+		key_play => play_button,
+		joystick_a => cdtv_joya,
+		joystick_b => cdtv_joyb
+	);
+
+	
 	chameleon2_io_blk : block
 	begin
 		chameleon2_io_inst : entity work.chameleon2_io
 			generic map (
 				enable_docking_station => true,
-				enable_cdtv_remote => true,
+				enable_cdtv_remote => false,
 				enable_c64_joykeyb => true,
 				enable_c64_4player => true
 			)
@@ -283,10 +303,10 @@ end process;
 
 		
 --joy1<=not gp1_run & not gp1_select & (c64_joy1 and cdtv_joy1);
-gp1_run<=c64_keys(11) and c64_keys(56) when c64_joy1="111111" else '1';
-gp1_select<=c64_keys(60) when c64_joy1="111111" else '1';
-joy1<=gp1_run & gp1_select & c64_joy1;
-joy2<="11" & c64_joy2;
+gp1_run<=(not play_button) and c64_keys(2) when c64_joy1="111111" else not play_button;
+gp1_select<=(not power_button) and c64_keys(15) when c64_joy1="111111" else not power_button;
+joy1<=gp1_run & gp1_select & (c64_joy1 and cdtv_joya);
+joy2<="11" & (c64_joy2 and cdtv_joyb);
 joy3<="11" & joystick3;
 joy4<="11" & joystick4;
 	
@@ -294,9 +314,9 @@ joy4<="11" & joystick4;
   U00 : entity work.clockgen
     port map(
       inclk0 => clk50m,       -- 50 MHz external
-      c0     => slowclk,         -- 50MHz internal
-      c1     => fastclk,         -- 100MHz = 21.43MHz x 4
-      c2     => ram_clk,        -- 100MHz external
+      c0     => slowclk,         -- 40MHz slowclk
+      c1     => fastclk,         -- 80MHz sysclk
+      c2     => ram_clk,        -- 80MHz phase shifted for RAM
       locked => pll_locked
     );
 
@@ -309,7 +329,7 @@ virtualtoplevel : entity work.VirtualToplevel
 	)
 	port map(
 		clk => fastclk,
-		slowclk => clk50m,
+		slowclk => slowclk,
 		reset_in => n_reset,
 
 		-- VGA
@@ -356,7 +376,9 @@ virtualtoplevel : entity work.VirtualToplevel
 	joy1 => joy1(5 downto 0),
 	joy2 => joy2(5 downto 0),
 	joy3 => joy3(5 downto 0),
-	joy4 => joy4(5 downto 0)
+	joy4 => joy4(5 downto 0),
+	button_coin => gp1_run and c64_keys(2),
+	button_power => gp1_select and c64_keys(15)
 );
 
 	

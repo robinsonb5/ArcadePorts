@@ -51,7 +51,7 @@ module MCR3Mono_MiST(
 	input [7:0] joystick_2,
 	input [7:0] joystick_3,
 	input [31:0] status,
-	input [7:0] buttons_in,
+	input [8:0] buttons_in,
 	input [7:0] switches_in
 );
 
@@ -77,6 +77,9 @@ wire m_up2, m_down2, m_left2, m_right2, m_fire2A, m_fire2B, m_fire2C, m_fire2D;
 wire m_up3, m_down3, m_left3, m_right3, m_fire3A, m_fire3B, m_fire3C, m_fire3D;
 wire m_up4, m_down4, m_left4, m_right4, m_fire4A, m_fire4B, m_fire4C, m_fire4D;
 wire m_tilt, m_coin1, m_coin2, m_coin3, m_coin4, m_one_player, m_two_players, m_three_players, m_four_players;
+wire m_test;
+
+assign m_test = buttons_in[8];
 
 assign m_up = joystick_0[0];
 assign m_down = joystick_0[1];
@@ -124,7 +127,7 @@ always @(*) begin
 	7'h0: // RAMPAGE
 	begin
 		// normal controls for 3 players
-		input0 = ~{2'b00, service, 1'b0, 2'b00, m_coin2, m_coin1};
+		input0 = ~{2'b00, service, m_test, 2'b00, m_coin2, m_coin1};
 		input1 = ~{2'b00, m_fireB, m_fireA, m_left, m_down, m_right, m_up};
 		input2 = ~{2'b00, m_fire2B, m_fire2A, m_left2, m_down2, m_right2, m_up2};
 		input3 = ~{/*cheat*/status[11], /*coin B*/3'b000, /*coin A*/1'b0, /*score opt*/status[10], /*difficulty*/status[9:8]};

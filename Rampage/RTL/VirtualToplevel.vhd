@@ -62,7 +62,11 @@ entity VirtualToplevel is
 		
 		-- Audio
 		audio_l : out std_logic;
-		audio_r : out std_logic
+		audio_r : out std_logic;
+		
+		button_power : in std_logic :='1';
+		button_coin : in std_logic :='1';
+		button_service : in std_logic :='1'
 );
 end entity;
 
@@ -123,7 +127,7 @@ signal ser_rxint : std_logic;
 
 -- Interrupt signals
 
-constant int_max : integer := 2;
+constant int_max : integer := 1;
 signal int_triggers : std_logic_vector(int_max downto 0);
 signal int_status : std_logic_vector(int_max downto 0);
 signal int_ack : std_logic;
@@ -162,7 +166,7 @@ signal mouserecvbyte : std_logic_vector(10 downto 0);
 
 -- Joystick signals:
 
-signal buttons : std_logic_vector(7 downto 0);
+signal buttons : std_logic_vector(8 downto 0);
 signal switches : std_logic_vector(7 downto 0);
 signal joy1_merged : unsigned(5 downto 0);
 signal joy2_merged : unsigned(5 downto 0);
@@ -173,6 +177,10 @@ signal gp2_emu : unsigned(7 downto 0);
 signal gp3_emu : unsigned(7 downto 0);
 signal gp4_emu : unsigned(7 downto 0);
 
+
+-- other input signals:
+
+signal button_edge : std_logic;
 
 -- CPU signals
 
@@ -240,7 +248,7 @@ COMPONENT MCR3Mono_MiST
 		joystick_1 : in unsigned(7 downto 0);
 		joystick_2 : in unsigned(7 downto 0);
 		joystick_3 : in unsigned(7 downto 0);
-		buttons_in : in std_logic_vector(7 downto 0);
+		buttons_in : in std_logic_vector(8 downto 0);
 		switches_in : in std_logic_vector(7 downto 0);
 		status : in std_logic_vector(31 downto 0)
 	);
@@ -399,7 +407,19 @@ mytimer : entity work.timer_controller
 		ticks(0) => timer_tick -- Tick signal is used to trigger an interrupt
 	);
 
+	
+-- Button edge detect
 
+--edgedetect : entity work.edgedetect
+--generic map (
+--	inputs => 2
+--)
+--port map (
+--	clk => clk,
+--	d => button_power&button_coin,
+--	q => button_edge
+--);
+--
 -- Interrupt controller
 
 intcontroller: entity work.interrupt_controller
@@ -415,7 +435,7 @@ port map (
 	status => int_status
 );
 
-int_triggers<=(0=>timer_tick, 1=>ps2_int, others => '0');
+int_triggers<=(0=>ps2_int, others => '0');
 
 
 -- ROM
@@ -505,7 +525,7 @@ begin
 		spi_cs <= '1';
 		uploading<='0';
 		upload_req<='0';
-		buttons<=X"00";
+		buttons<=(others=>'0');
 		switches<=X"00";
 	elsif rising_edge(clk) then
 		mem_busy<='1';
@@ -542,7 +562,7 @@ begin
 							mem_busy<='0';
 
 						when X"44" => -- buttons
-							buttons<=from_cpu(7 downto 0);
+							buttons<=from_cpu(buttons'high downto 0);
 							mem_busy<='0';
 
 						when X"48" => -- emulated gamepad
@@ -627,6 +647,16 @@ begin
 				
 				when X"F" =>	-- Peripherals
 					case cpu_addr(7 downto 0) is
+
+						when X"44" => -- buttons
+							from_mem(8 downto 0)<="0000"&not button_power&"000"&not button_coin;
+							mem_busy<='0';
+
+						when X"48" => -- emulated gamepad
+							from_mem<=(others=>'0');
+							from_mem(5 downto 0)<=std_logic_vector(not joy1);
+							from_mem(13 downto 8)<=std_logic_vector(not joy2);
+							mem_busy<='0';
 
 						when X"B0" => -- Interrupt
 							from_mem<=(others=>'X');
