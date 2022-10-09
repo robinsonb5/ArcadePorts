@@ -13,6 +13,7 @@ architecture rtl of chameleon2 is
 
 	signal slowclk : std_logic;
 	signal fastclk : std_logic;
+	signal hostclk : std_logic;
 	signal pll_locked : std_logic;
 	signal ena_1mhz : std_logic;
 	signal ena_1khz : std_logic;
@@ -133,7 +134,6 @@ begin
 	iec_atn_out <= '0';
 	iec_dat_out <= '0';
 	iec_srq_out <= '0';
-	irq_out <= '0';
 	nmi_out <= '0';
 	usart_rx<='1';
 
@@ -163,17 +163,17 @@ begin
 -- -----------------------------------------------------------------------
 	my1Mhz : entity work.chameleon_1mhz
 		generic map (
-			clk_ticks_per_usec => sysclk_frequency
+			clk_ticks_per_usec => 80
 		)
 		port map (
-			clk => fastclk,
+			clk => hostclk,
 			ena_1mhz => ena_1mhz,
 			ena_1mhz_2 => open
 		);
 
 	my1Khz : entity work.chameleon_1khz
 		port map (
-			clk => fastclk,
+			clk => hostclk,
 			ena_1mhz => ena_1mhz,
 			ena_1khz => ena_1khz
 		);
@@ -228,7 +228,7 @@ begin
 
 	cdtv : entity work.chameleon_cdtv_remote
 	port map(
-		clk => fastclk,
+		clk => hostclk,
 		ena_1mhz => ena_1mhz,
 		ir => ir,
 		key_power => power_button,
@@ -248,7 +248,7 @@ begin
 				enable_c64_4player => true
 			)
 			port map (
-				clk => fastclk,
+				clk => hostclk,
 				ena_1mhz => ena_1mhz,
 				phi2_n => phi2_n,
 				dotclock_n => dotclk_n,
@@ -293,14 +293,16 @@ begin
 	end block;
 
 -- Synchronise IR signal
-process (slowclk)
+process (hostclk)
 begin
-	if rising_edge(slowclk) then
+	if rising_edge(hostclk) then
 		ir_d<=ir_data;
 		ir<=ir_d;
 	end if;
 end process;
 
+clock_ior <='1';
+clock_iow <='1';
 		
 --joy1<=not gp1_run & not gp1_select & (c64_joy1 and cdtv_joy1);
 gp1_run<=(not play_button) and c64_keys(2) when c64_joy1="111111" else not play_button;
@@ -317,9 +319,11 @@ joy4<="11" & joystick4;
       c0     => slowclk,         -- 40MHz slowclk
       c1     => fastclk,         -- 80MHz sysclk
       c2     => ram_clk,        -- 80MHz phase shifted for RAM
+--		c3     => hostclk,        -- 100MHz 
       locked => pll_locked
     );
 
+hostclk <= fastclk;
 vga_window<='1';
 
 virtualtoplevel : entity work.VirtualToplevel

@@ -1,6 +1,6 @@
 832DIR=../../EightThirtyTwo/
 INCDIR=$(832DIR)/include/
-832LIBDIR=$(832DIR)/Lib/
+832LIBDIR=$(832DIR)/lib832/
 LIBDIR=../../Lib/
 ROMGENDIR = $(832DIR)/romgen
 ROMGEN = $(ROMGENDIR)/romgen
@@ -9,7 +9,7 @@ AS=$(832DIR)/832a/832a
 LD=$(832DIR)/832a/832l
 DUMP=objdump
 CFLAGS = -+ -size
-LDFLAGS = -s_STACKSIZE=512
+LDFLAGS = -s_STACKSIZE=512 $(832LIBDIR)/crt0.a $(832LIBDIR)/lib832.a
 COPT = -O=1311
 all: Boot_ROM.vhd
 
@@ -22,9 +22,9 @@ clean :
 	-rm *.elf
 
 %_ROM.vhd: %.bin $(ROMGEN)
-	sed 's/dualportram/$*_rom/' >$*_ROM.vhd <$(ROMGENDIR)/rom_prologue.vhd
+	sed 's/eightthirtytwo_rom/$*_rom/' >$*_ROM.vhd <$(ROMGENDIR)/rom_prologue_byte.vhd
 	$(ROMGEN) -b $*.bin >>$*_ROM.vhd
-	cat >>$*_ROM.vhd $(ROMGENDIR)/rom_epilogue.vhd
+	cat >>$*_ROM.vhd $(ROMGENDIR)/rom_epilogue_byte.vhd
 
 %.bin : %.elf Makefile
 	objcopy -Obinary $< $@
@@ -32,21 +32,21 @@ clean :
 %.o : %.s Makefile
 	gcc -c $*.s
 
-Boot.bin : start.o premain.o uart.o tiny_printf.o spi_sd.o minfat.o swap.o \
+Boot.bin : spi_sd.o minfat.o swap.o \
 			pausecpu.o keyboard.o interrupts.o osd.o osd_spritesheet.o main.o
-	$(LD) $(LDFLAGS) -o $@ $+
+	$(LD) -m $@.map $(LDFLAGS) -o $@ $+
 
-%.o : %.S Makefile $(832LIBDIR)/start.S
+%.o : %.S Makefile 
 	$(AS) -o $*.o $*.S
 
-%.o : %.c Makefile $(832LIBDIR)/start.S
+%.o : %.c Makefile 
 	$(CC) $(COPT) $(CFLAGS) -I$(INCDIR) -I$(LIBDIR) $*.c
 	$(AS) -o $*.o $*.asm
 
-%.o : $(832LIBDIR)/%.S Makefile $(832LIBDIR)/start.S
+%.o : $(832LIBDIR)/%.S Makefile 
 	$(AS) -o $*.o $(832LIBDIR)/$*.S
 
-%.o : $(832LIBDIR)/%.asm Makefile $(832LIBDIR)/start.S
+%.o : $(832LIBDIR)/%.asm Makefile 
 	$(AS) -o $*.o $(832LIBDIR)/$*.asm
 
 %.o : $(LIBDIR)/%.S Makefile 

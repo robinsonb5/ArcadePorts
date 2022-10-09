@@ -80,6 +80,7 @@ architecture rtl of chameleon_toplevel is
 -- System clocks
 	signal clk : std_logic;
 	signal slowclk : std_logic;
+	signal hostclk : std_logic;
 
 	signal reset_button_n : std_logic;
 	signal pll_locked : std_logic;
@@ -151,7 +152,7 @@ architecture rtl of chameleon_toplevel is
 	
 	signal usart_rx : std_logic:='1'; -- Safe default
 	signal ir : std_logic;
-
+	
 	-- Sigma Delta audio
 	COMPONENT hybrid_pwm_sd
 	PORT
@@ -193,16 +194,17 @@ begin
 			c0 => slowclk,
 			c1 => clk,
 			c2 => sdram_clk,
+			c3 => hostclk,
 			locked => pll_locked
 		);
 
 my1mhz : entity work.chameleon_1mhz
 	generic map (
 		-- Timer calibration. Clock speed in Mhz.
-		clk_ticks_per_usec => sysclk_frequency
+		clk_ticks_per_usec => 100 -- fixed due to hostclk - v1 hardware neeeds 100MHz  sysclk_frequency
 	)
 	port map(
-		clk => clk,
+		clk => hostclk,
 		ena_1mhz => ena_1mhz
 	);
 
@@ -227,8 +229,8 @@ myReset : entity work.gen_reset
 		)
 		port map (
 		-- Clocks
-			clk => clk,
-			clk_mux => clk,
+			clk => hostclk,
+			clk_mux => hostclk,
 			ena_1mhz => ena_1mhz,
 			reset => not n_reset,
 			
@@ -296,7 +298,7 @@ myReset : entity work.gen_reset
 
 	cdtv : entity work.chameleon_cdtv_remote
 	port map(
-		clk => clk,
+		clk => hostclk,
 		ena_1mhz => ena_1mhz,
 		ir => ir,
 		key_power => power_button,

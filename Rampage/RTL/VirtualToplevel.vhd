@@ -2,7 +2,6 @@
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.numeric_std.ALL;
-use work.rom_pkg.ALL;
 use work.Toplevel_Config.ALL;
 
 entity VirtualToplevel is
@@ -211,10 +210,6 @@ signal upload_data : std_logic_vector(7 downto 0);
 signal upload_req : std_logic;
 signal upload_ack : std_logic;
 
-
-signal to_rom : ToROM;
-signal from_rom : FromROM;
-
 COMPONENT MCR3Mono_MiST
 	PORT
 	(
@@ -254,6 +249,8 @@ COMPONENT MCR3Mono_MiST
 	);
 END COMPONENT;
 
+	signal rom_wr : std_logic;
+	signal from_rom : std_logic_vector(31 downto 0);
 
 begin
 
@@ -442,24 +439,23 @@ int_triggers<=(0=>ps2_int, others => '0');
 
 	rom : entity work.Boot_rom
 	generic map(
-		maxAddrBitBRAM => 12
+		Addr_Width => 11
 	)
 	port map(
 		clk => clk,
-		from_soc => to_rom,
-		to_soc => from_rom
+		addr => cpu_addr(12 downto 2),
+		q => from_rom,
+		-- Allow writes - defaults supplied to simplify projects that don't need to write.
+		d => from_cpu,
+		we => rom_wr,
+		bytesel => cpu_bytesel
 	);
-
 
 -- Main CPU
 
 	mem_rom <='1' when cpu_addr(31 downto 26)=X"0"&"00" else '0';
 	mem_rd<='1' when cpu_req='1' and cpu_wr='0' and mem_rom='0' else '0';
 	mem_wr<='1' when cpu_req='1' and cpu_wr='1' and mem_rom='0' else '0';
-
-	to_rom.MemAAddr<=cpu_addr(15 downto 2);
-	to_rom.MemAWrite<=from_cpu;
-	to_rom.MemAByteSel<=cpu_bytesel;
 		
 	process(clk)
 	begin
@@ -467,7 +463,7 @@ int_triggers<=(0=>ps2_int, others => '0');
 			rom_ack<=cpu_req and mem_rom;
 
 			if mem_rom='1' then
-				to_cpu<=from_rom.MemARead;
+				to_cpu<=from_rom;
 			else
 				to_cpu<=from_mem;
 			end if;
@@ -479,9 +475,9 @@ int_triggers<=(0=>ps2_int, others => '0');
 			end if;
 
 			if mem_rom='1' then
-				to_rom.MemAWriteEnable<=(cpu_wr and cpu_req);
+				rom_wr<=(cpu_wr and cpu_req);
 			else
-				to_rom.MemAWriteEnable<='0';
+				rom_wr<='0';
 			end if;
 	
 		end if;	
